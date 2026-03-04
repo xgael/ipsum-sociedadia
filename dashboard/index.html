@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es" class="bg-[#090514]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lince - Dashboard UVM | AI Society</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .resumen-cell { max-width: 200px; }
+        .cursor-help { cursor: help; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #090514; }
+        ::-webkit-scrollbar-thumb { background: #2a2145; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
+    </style>
+</head>
+<body class="font-sans text-gray-300 antialiased min-h-screen selection:bg-purple-500/30">
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+            <div>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                    <i class="fas fa-layer-group text-purple-500"></i> Dashboard Lince
+                </h1>
+                <p class="text-lg text-gray-400 mt-2">Monitoreo y calificación de prospectos UVM - Ciclo 2026</p>
+            </div>
+            <button onclick="lanzarMasivo()" class="bg-gradient-to-r from-[#8755FF] to-[#6340c9] hover:from-[#9b73ff] hover:to-[#734cdb] text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(135,85,255,0.3)] transition-all duration-300 ease-in-out flex items-center gap-3 transform hover:scale-105 active:scale-95 border border-purple-400/30">
+                <i class="fas fa-robot text-xl"></i> 
+                <span>Activar Lince (Llamar Pendientes)</span>
+            </button>
+            <button onclick="abrirModal()" class="bg-[#150F2D] hover:bg-[#1a1338] text-white font-bold py-3 px-6 rounded-xl border border-purple-400/30 hover:border-purple-400/60 transition-all duration-300 flex items-center gap-2">
+                <i class="fas fa-user-plus text-purple-400"></i>
+                <span>+ Agregar Prospecto</span>
+            </button>
+        </div>
+
+        <!-- KPIs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-[#150F2D] rounded-2xl shadow-lg border border-[#2a2145] p-6 flex items-center transition-all hover:border-purple-500/50 hover:bg-[#1a1338]">
+                <div class="p-4 rounded-xl bg-purple-500/10 text-purple-400 mr-5 border border-purple-500/20">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Avance de Campaña</p>
+                    <p class="text-3xl font-extrabold text-white mt-1" id="kpi-avance">0 / 0</p>
+                </div>
+            </div>
+            <div class="bg-[#150F2D] rounded-2xl shadow-lg border border-[#2a2145] p-6 flex items-center transition-all hover:border-green-500/50 hover:bg-[#1a1338]">
+                <div class="p-4 rounded-xl bg-green-500/10 text-green-400 mr-5 border border-green-500/20">
+                    <i class="fab fa-whatsapp text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Aceptaron (WA)</p>
+                    <p class="text-3xl font-extrabold text-white mt-1" id="kpi-wa">0</p>
+                </div>
+            </div>
+            <div class="bg-[#150F2D] rounded-2xl shadow-lg border border-[#2a2145] p-6 flex items-center transition-all hover:border-blue-500/50 hover:bg-[#1a1338]">
+                <div class="p-4 rounded-xl bg-blue-500/10 text-blue-400 mr-5 border border-blue-500/20">
+                    <i class="fas fa-star text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Promedio Gral.</p>
+                    <p class="text-3xl font-extrabold text-white mt-1" id="kpi-score">-</p>
+                </div>
+            </div>
+            <div class="bg-[#150F2D] rounded-2xl shadow-lg border border-[#2a2145] p-6 flex items-center transition-all hover:border-red-500/50 hover:bg-[#1a1338]">
+                <div class="p-4 rounded-xl bg-red-500/10 text-red-400 mr-5 border border-red-500/20">
+                    <i class="fas fa-bell text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Atención Humana</p>
+                    <p class="text-3xl font-extrabold text-white mt-1" id="kpi-urgentes">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="bg-[#150F2D] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] overflow-hidden border border-[#2a2145]">
+            <div class="px-6 py-5 border-b border-[#2a2145] bg-[#1a1235]/80 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-white">Base de Datos de Prospectos</h2>
+                <span class="text-sm text-purple-400"><i class="fas fa-sync-alt animate-spin mr-2" id="loading-icon" style="display: none;"></i> Sincronizando...</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-[#2a2145]">
+                    <thead class="bg-[#0e0a1f]">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Prospecto</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estatus</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Interés / Campus</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Programa / Ciclo</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Perfil y Beca</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Seguimiento</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider resumen-cell">Resumen de IA</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-body" class="divide-y divide-[#2a2145] bg-[#150F2D]">
+                        <tr>
+                            <td colspan="8" class="px-6 py-10 text-center text-gray-400">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-3 text-purple-500"></i>
+                                <p class="font-medium">Cargando base de datos neural...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal agregar prospecto -->
+    <div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-[#150F2D] border border-[#2a2145] rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-white font-extrabold text-lg"><i class="fas fa-user-plus text-purple-400 mr-2"></i>Nuevo Prospecto</h3>
+                <button onclick="cerrarModal()" class="text-gray-500 hover:text-white transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Nombre completo *</label>
+                    <input id="f-nombre" type="text" placeholder="Ej. Juan García" class="w-full bg-[#0e0a1f] border border-[#2a2145] focus:border-purple-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 outline-none transition-colors">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Teléfono (con código de país) *</label>
+                    <input id="f-telefono" type="text" placeholder="Ej. +529991234567" class="w-full bg-[#0e0a1f] border border-[#2a2145] focus:border-purple-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 outline-none transition-colors">
+                    <p class="text-xs text-gray-600 mt-1">Incluye +52 para México</p>
+                </div>
+            </div>
+            <div id="modal-error" class="hidden mt-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2"></div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="cerrarModal()" class="flex-1 bg-[#0e0a1f] hover:bg-[#2a2145] border border-[#2a2145] text-gray-400 font-bold py-2.5 rounded-xl transition-all text-sm">Cancelar</button>
+                <button onclick="guardarProspecto()" class="flex-1 bg-gradient-to-r from-[#8755FF] to-[#6340c9] hover:from-[#9b73ff] hover:to-[#734cdb] text-white font-bold py-2.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2" id="btn-guardar">
+                    <i class="fas fa-save"></i> Guardar y llamar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://xdkttxxegedmbjtdauzz.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_IVlTbXfaYauXULY-b92R2Q_169VAFU-'; 
+        const WORKER_LANZADOR_URL = 'https://lanzadordellamadasuvm.smartpasses.workers.dev/'; 
+        const EMAIL_ASESOR = 'pedrocarrillo@b-drive.com.mx'; // 👈 Cambia este correo fácilmente
+
+        const headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+        };
+
+        // Colores por tipo de programa
+        const programaColors = {
+            'Licenciatura Tradicional': 'bg-blue-500/10 text-blue-400 ring-blue-500/30',
+            'Licenciatura Ejecutiva':   'bg-orange-500/10 text-orange-400 ring-orange-500/30',
+            'Licenciatura Online':      'bg-cyan-500/10 text-cyan-400 ring-cyan-500/30',
+            'Posgrado':                 'bg-purple-500/10 text-purple-400 ring-purple-500/30',
+        };
+
+        function mostrarCargando(cargando) {
+            document.getElementById('loading-icon').style.display = cargando ? 'inline-block' : 'none';
+        }
+
+        async function cargarAlumnos() {
+            mostrarCargando(true);
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/alumnos?select=*&order=id.desc`, { headers });
+                if (!res.ok) throw new Error('Error al conectar con Supabase');
+                const alumnos = await res.json();
+                
+                const total = alumnos.length;
+                const completadas = alumnos.filter(a => a.estatus === 'completada').length;
+                const conversionesWA = alumnos.filter(a => a.envio_whatsapp === true).length;
+                const urgentes = alumnos.filter(a => a.requiere_revalidacion === true).length;
+                
+                const promedios = alumnos.filter(a => a.promedio != null && a.promedio > 0).map(a => parseFloat(a.promedio));
+                const promGral = promedios.length > 0 ? (promedios.reduce((a,b)=>a+b,0) / promedios.length).toFixed(1) : '-';
+
+                animarNumero('kpi-avance', completadas, `${completadas} / ${total}`);
+                animarNumero('kpi-wa', conversionesWA);
+                document.getElementById('kpi-score').innerText = promGral;
+                animarNumero('kpi-urgentes', urgentes);
+
+                const tbody = document.getElementById('tabla-body');
+                tbody.innerHTML = '';
+
+                if (alumnos.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-gray-500 font-medium">No hay prospectos en la base de datos.</td></tr>`;
+                    return;
+                }
+
+                alumnos.forEach(al => {
+                    const statusColor = al.estatus === 'completada' ? 'bg-green-500/10 text-green-400 ring-green-500/30' : 
+                                        al.estatus === 'en_curso'   ? 'bg-yellow-500/10 text-yellow-400 ring-yellow-500/30' : 
+                                        'bg-gray-800 text-gray-400 ring-gray-700';
+
+                    const programaColor = programaColors[al.tipo_programa] || 'bg-gray-800 text-gray-400 ring-gray-700';
+
+                    const becaHTML = al.promedio ? `
+                        <div class="text-sm font-bold text-white">Prom: ${al.promedio}</div>
+                        <div class="text-xs text-purple-400 font-bold mt-0.5">${al.beca_estimada || 'Pendiente'}</div>
+                    ` : '<span class="text-gray-600 text-sm">-</span>';
+
+                    const atencionHTML = `
+                        <div class="flex items-center gap-1.5 text-sm">
+                            ${al.envio_whatsapp ? '<i class="fab fa-whatsapp text-green-400"></i> <span class="font-bold text-green-400">Sí</span>' : '<i class="fas fa-times text-gray-600"></i> <span class="text-gray-500">No</span>'}
+                        </div>
+                        ${al.requiere_revalidacion ? `
+                            <div class="mt-1 text-xs font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full inline-block border border-red-500/20">
+                                <i class="fas fa-exclamation-circle mr-1"></i>Revalida
+                            </div>
+                            <button onclick="alertarAsesor('${al.nombre}', '${al.telefono}', '${al.carrera_interes || 'No especificada'}', '${al.campus_interes || 'No especificado'}')"
+                                class="mt-1 text-xs font-bold text-white bg-red-500/80 hover:bg-red-500 px-2 py-1 rounded-lg flex items-center gap-1 border border-red-400/40 transition-all duration-200">
+                                <i class="fas fa-envelope text-xs"></i> Alertar Asesor
+                            </button>` : ''}
+                    `;
+
+                    // 👈 nuevo: Programa / Ciclo
+                    const programaHTML = `
+                        ${al.tipo_programa 
+                            ? `<span class="px-2 py-1 inline-flex text-xs font-bold rounded-full ring-1 ring-inset ${programaColor}">${al.tipo_programa}</span>`
+                            : '<span class="text-gray-600 text-sm">-</span>'
+                        }
+                        ${al.ciclo_interes 
+                            ? `<div class="text-xs text-gray-400 mt-1"><i class="fas fa-calendar-alt mr-1"></i>${al.ciclo_interes}</div>`
+                            : ''
+                        }
+                    `;
+
+                    const resumenTexto = al.resumen_llamada || 'Sin resumen disponible.';
+                    const resumenTruncado = resumenTexto.length > 45 ? resumenTexto.substring(0, 45) + '...' : resumenTexto;
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-[#1a1338] transition-colors duration-150 ease-in-out">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="font-bold text-white">${al.nombre}</div>
+                                <div class="text-sm text-gray-400 font-medium">${al.telefono}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ring-1 ring-inset ${statusColor}">
+                                    ${al.estatus.toUpperCase()}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-bold text-white">${al.carrera_interes || '<span class="text-gray-600 font-normal">Indefinida</span>'}</div>
+                                <div class="text-xs text-gray-400 mt-0.5">${al.modalidad_interes || '-'} <span class="mx-1 text-[#2a2145]">|</span> ${al.campus_interes || '-'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${programaHTML}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${becaHTML}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${atencionHTML}
+                            </td>
+                            <td class="px-6 py-4 resumen-cell" title="${resumenTexto}">
+                                <div class="text-sm text-gray-400 truncate cursor-help">${resumenTruncado}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="llamarIndividual('${al.id}', '${al.telefono}', '${al.nombre}')" class="text-purple-300 hover:text-white bg-purple-500/10 hover:bg-purple-500/30 border border-purple-500/30 font-bold px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 ml-auto shadow-sm">
+                                    <i class="fas fa-phone text-xs"></i> Llamar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('tabla-body').innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-red-400 font-medium">Error al conectar con los servidores.</td></tr>`;
+            } finally {
+                mostrarCargando(false);
+            }
+        }
+
+        function animarNumero(id, valorFinal, textoFinal = null) {
+            let elemento = document.getElementById(id);
+            let valorActual = 0;
+            let incremento = Math.ceil(valorFinal / 20); 
+            if (valorFinal === 0) { elemento.innerText = textoFinal || 0; return; }
+            let timer = setInterval(() => {
+                valorActual += incremento;
+                if (valorActual >= valorFinal) {
+                    valorActual = valorFinal;
+                    clearInterval(timer);
+                    elemento.innerText = textoFinal || valorActual;
+                } else {
+                    elemento.innerText = valorActual;
+                }
+            }, 30);
+        }
+
+        async function lanzarMasivo() {
+            if(!confirm('¿Estás seguro de activar a Lince para TODOS los prospectos pendientes?')) return;
+            mostrarCargando(true);
+            try {
+                const res = await fetch(WORKER_LANZADOR_URL);
+                const text = await res.text();
+                alert(text);
+                setTimeout(cargarAlumnos, 2000);
+            } catch (error) {
+                alert('Error de conexión.');
+                mostrarCargando(false);
+            }
+        }
+
+        async function llamarIndividual(id, telefono, nombre) {
+            if(!confirm(`¿Iniciar a Lince para contactar a ${nombre}?`)) return;
+            try {
+                const res = await fetch(WORKER_LANZADOR_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                const data = await res.json();
+                alert(data.mensaje || "Lince ha iniciado la llamada.");
+                mostrarCargando(true);
+                setTimeout(cargarAlumnos, 3000); 
+            } catch (error) {
+                alert('Error al contactar al servidor.');
+                mostrarCargando(false);
+            }
+        }
+
+        function alertarAsesor(nombre, telefono, carrera, campus) {
+            const asunto = encodeURIComponent(`⚠️ Revalidación requerida - ${nombre}`);
+            const cuerpo = encodeURIComponent(
+`Hola, se requiere atención humana para el siguiente prospecto:
+
+👤 Nombre: ${nombre}
+📞 Teléfono: ${telefono}
+🎓 Carrera de interés: ${carrera}
+📍 Campus: ${campus}
+
+⚡ Este prospecto preguntó por revalidación de materias durante su llamada con Lince.
+El predictamen de materias queda listo en menos de 24 horas.
+
+⚠️ NOTA: En producción esta alerta se enviaría automáticamente vía WhatsApp al detectarse la revalidación.`
+            );
+            window.location.href = `mailto:${EMAIL_ASESOR}?subject=${asunto}&body=${cuerpo}`;
+        }
+
+        function abrirModal() {
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+            document.getElementById('f-nombre').value = '';
+            document.getElementById('f-telefono').value = '';
+            document.getElementById('modal-error').classList.add('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        }
+
+        async function guardarProspecto() {
+            const nombre = document.getElementById('f-nombre').value.trim();
+            const telefono = document.getElementById('f-telefono').value.trim();
+            const errorDiv = document.getElementById('modal-error');
+
+            // Validación
+            if (!nombre || !telefono) {
+                errorDiv.textContent = 'Por favor completa nombre y teléfono.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            if (!telefono.startsWith('+')) {
+                errorDiv.textContent = 'El teléfono debe incluir el código de país. Ej: +529991234567';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('btn-guardar');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+
+            try {
+                // Guardar en Supabase
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/alumnos`, {
+                    method: 'POST',
+                    headers: { ...headers, 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ nombre, telefono, estatus: 'pendiente' })
+                });
+
+                if (!res.ok) throw new Error('Error al guardar en la base de datos.');
+
+                cerrarModal();
+                mostrarCargando(true);
+                alert('✅ Prospecto agregado correctamente. Usa el botón "Llamar" cuando quieras contactarlo.');
+                setTimeout(cargarAlumnos, 1000);
+
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar y llamar';
+                btn.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarAlumnos);
+    </script>
+</body>
+</html>
