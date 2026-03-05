@@ -22,12 +22,11 @@ const statusConfig = {
 export default function StatusBadge({ estatus }) {
   const config = statusConfig[estatus] || statusConfig.pendiente
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full py-1 pl-[5px] pr-[5px] ${config.outerBg}`}>
+    <span className={`inline-flex items-center rounded-full py-1 px-[5px] ${config.outerBg}`}>
       <span className="inline-flex items-center gap-1.5 bg-white rounded-full py-[7px] px-4">
         <span className={`w-2 h-2 rounded-full ${config.dot}`} />
         <span className="font-body text-xs font-semibold text-[#1a1a1a]">{config.label}</span>
       </span>
-      <span className={`font-body text-sm font-medium px-2 ${config.arrow}`}>&rarr;</span>
     </span>
   )
 }

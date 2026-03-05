@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createAlumno } from '../services/supabase'
 import { useToast } from './Toast'
+import PhoneInput from './PhoneInput'
 
 export default function AddProspectModal({ isOpen, onClose, onSaved }) {
   const [nombre, setNombre] = useState('')
@@ -19,12 +20,8 @@ export default function AddProspectModal({ isOpen, onClose, onSaved }) {
   }
 
   const handleSave = async () => {
-    if (!nombre.trim() || !telefono.trim()) {
+    if (!nombre.trim() || !telefono) {
       setError('Por favor completa nombre y teléfono.')
-      return
-    }
-    if (!telefono.trim().startsWith('+')) {
-      setError('El teléfono debe incluir el código de país. Ej: +529991234567')
       return
     }
 
@@ -63,15 +60,8 @@ export default function AddProspectModal({ isOpen, onClose, onSaved }) {
             />
           </div>
           <div>
-            <label className="font-body text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[1px] mb-1 block">Teléfono (con código de país) *</label>
-            <input
-              type="text"
-              value={telefono}
-              onChange={e => setTelefono(e.target.value)}
-              placeholder="Ej. +529991234567"
-              className="w-full bg-[var(--bg-muted)] border border-[var(--border)] focus:border-[var(--accent)] px-4 py-2.5 font-body text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none transition-colors"
-            />
-            <p className="font-body text-[11px] text-[var(--text-muted)] mt-1">Incluye +52 para México</p>
+            <label className="font-body text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[1px] mb-1 block">Teléfono *</label>
+            <PhoneInput value={telefono} onChange={setTelefono} />
           </div>
         </div>
         {error && (
