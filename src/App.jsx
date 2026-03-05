@@ -1,34 +1,54 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useAlumnos } from './hooks/useAlumnos'
 import { lanzarMasivo, llamarIndividual } from './services/supabase'
+import { useToast } from './components/Toast'
 import Header from './components/Header'
 import KpiCards from './components/KpiCards'
 import ProspectsTable from './components/ProspectsTable'
 import AddProspectModal from './components/AddProspectModal'
+import ConfirmModal from './components/ConfirmModal'
 
 function App() {
   const { alumnos, kpis, loading, error, refetch } = useAlumnos()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [confirm, setConfirm] = useState(null)
+  const toast = useToast()
+
+  const showConfirm = useCallback((title, message, confirmLabel) => {
+    return new Promise(resolve => {
+      setConfirm({ title, message, confirmLabel, resolve })
+    })
+  }, [])
 
   const handleBulkCall = async () => {
-    if (!confirm('¿Estás seguro de activar a Lince para TODOS los prospectos pendientes?')) return
+    const ok = await showConfirm(
+      'Activar Lince',
+      '¿Estás seguro de activar a Lince para TODOS los prospectos pendientes?',
+      'Activar'
+    )
+    if (!ok) return
     try {
       const text = await lanzarMasivo()
-      alert(text)
+      toast(text)
       setTimeout(refetch, 2000)
     } catch {
-      alert('Error de conexión.')
+      toast('Error de conexión.', 'error')
     }
   }
 
   const handleCallIndividual = async (id, telefono, nombre) => {
-    if (!confirm(`¿Iniciar a Lince para contactar a ${nombre}?`)) return
+    const ok = await showConfirm(
+      'Iniciar llamada',
+      `¿Iniciar a Lince para contactar a ${nombre}?`,
+      'Llamar'
+    )
+    if (!ok) return
     try {
       const data = await llamarIndividual(id)
-      alert(data.mensaje || 'Lince ha iniciado la llamada.')
+      toast(data.mensaje || 'Lince ha iniciado la llamada.')
       setTimeout(refetch, 3000)
     } catch {
-      alert('Error al contactar al servidor.')
+      toast('Error al contactar al servidor.', 'error')
     }
   }
 
@@ -76,6 +96,15 @@ function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSaved={refetch}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirm}
+        title={confirm?.title}
+        message={confirm?.message}
+        confirmLabel={confirm?.confirmLabel}
+        onConfirm={() => { confirm?.resolve(true); setConfirm(null) }}
+        onCancel={() => { confirm?.resolve(false); setConfirm(null) }}
       />
     </>
   )

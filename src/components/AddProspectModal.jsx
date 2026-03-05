@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { createAlumno } from '../services/supabase'
+import { useToast } from './Toast'
 
 export default function AddProspectModal({ isOpen, onClose, onSaved }) {
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const toast = useToast()
 
   if (!isOpen) return null
 
@@ -30,7 +32,7 @@ export default function AddProspectModal({ isOpen, onClose, onSaved }) {
     try {
       await createAlumno(nombre.trim(), telefono.trim())
       handleClose()
-      alert('Prospecto agregado correctamente. Usa el botón "Llamar" cuando quieras contactarlo.')
+      toast('Prospecto agregado correctamente. Usa el botón "Llamar" cuando quieras contactarlo.')
       onSaved()
     } catch (err) {
       setError(err.message)
