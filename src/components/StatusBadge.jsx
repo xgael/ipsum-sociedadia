@@ -1,8 +1,8 @@
 const statusConfig = {
   completada: {
     outerBg: 'bg-[#EAEEEA]',
-    dot: 'bg-[#4ade80]',
-    arrow: 'text-[#22c55e]',
+    dot: 'bg-[#8DC63F]',
+    arrow: 'text-[#7AB648]',
     label: 'Completada',
   },
   en_curso: {

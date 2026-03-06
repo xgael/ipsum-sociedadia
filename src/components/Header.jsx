@@ -4,7 +4,7 @@ export default function Header() {
       {/* Top Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/img/UVM.png" alt="UVM" className="h-6 w-auto" />
+          <img src="/img/ipsum-all.png" alt="Ipsum Technology" className="h-6 w-auto" />
           <span className="font-heading text-[var(--text-muted)] text-base">·</span>
           <span className="font-heading text-[var(--text-primary)] text-base font-semibold">Lince AI</span>
         </div>
@@ -22,7 +22,7 @@ export default function Header() {
         </div>
         <div className="flex flex-col items-start sm:items-end gap-1">
           <span className="font-heading text-[var(--text-primary)] text-[13px] font-medium">Ciclo 2026</span>
-          <span className="font-body text-[var(--text-muted)] text-xs">Universidad del Valle de México</span>
+          <span className="font-body text-[var(--text-muted)] text-xs">Ipsum Technology</span>
         </div>
       </div>
 

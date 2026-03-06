@@ -5,6 +5,7 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
   getExpandedRowModel,
+  getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table'
 import StatusBadge from './StatusBadge'
@@ -13,6 +14,8 @@ import ProspectExpandedRow from './ProspectExpandedRow'
 export default function ProspectsTable({ alumnos, loading, error, onCallIndividual }) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [sorting, setSorting] = useState([])
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
+  const [expanded, setExpanded] = useState({})
 
   const columns = useMemo(() => [
     {
@@ -83,13 +86,24 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
   const table = useReactTable({
     data: alumnos,
     columns,
-    state: { globalFilter, sorting },
+    state: { globalFilter, sorting, pagination, expanded },
     onGlobalFilterChange: setGlobalFilter,
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    onExpandedChange: (updater) => {
+      setExpanded((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater
+        // Find which row was just toggled on
+        const newKey = Object.keys(next).find((k) => next[k] && !prev[k])
+        // If a new row was opened, only keep that one
+        return newKey ? { [newKey]: true } : next
+      })
+    },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getRowCanExpand: () => true,
   })
 
@@ -252,6 +266,47 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {table.getPageCount() > 1 && (
+        <>
+          <div className="w-full h-px bg-[var(--border)]" />
+          <div className="px-6 py-4 flex items-center justify-between">
+            <span className="font-body text-[13px] text-[var(--text-secondary)]">
+              Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="font-body text-[13px] font-medium px-3 py-1.5 border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <i className="fas fa-chevron-left text-xs"></i>
+              </button>
+              {Array.from({ length: table.getPageCount() }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => table.setPageIndex(i)}
+                  className={`font-body text-[13px] font-medium w-8 h-8 flex items-center justify-center border transition-colors ${
+                    table.getState().pagination.pageIndex === i
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)]'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="font-body text-[13px] font-medium px-3 py-1.5 border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <i className="fas fa-chevron-right text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
