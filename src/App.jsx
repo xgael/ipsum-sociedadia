@@ -22,8 +22,8 @@ function App() {
 
   const handleBulkCall = async () => {
     const ok = await showConfirm(
-      'Activar Lince',
-      '¿Estás seguro de activar a Lince para TODOS los prospectos pendientes?',
+      'Activar Ipsum AI',
+      '¿Estás seguro de activar Ipsum AI para TODOS los prospectos pendientes?',
       'Activar'
     )
     if (!ok) return
@@ -39,13 +39,13 @@ function App() {
   const handleCallIndividual = async (id, telefono, nombre) => {
     const ok = await showConfirm(
       'Iniciar llamada',
-      `¿Iniciar a Lince para contactar a ${nombre}?`,
+      `¿Iniciar Ipsum AI para contactar a ${nombre}?`,
       'Llamar'
     )
     if (!ok) return
     try {
       const data = await llamarIndividual(id)
-      toast(data.mensaje || 'Lince ha iniciado la llamada.')
+      toast(data.mensaje || 'Ipsum AI ha iniciado la llamada.')
       setTimeout(refetch, 3000)
     } catch {
       toast('Error al contactar al servidor.', 'error')
@@ -72,7 +72,7 @@ function App() {
               className="font-heading bg-[var(--accent)] text-white text-[13px] font-semibold px-5 py-2.5 flex items-center gap-1.5 hover:opacity-90 transition-opacity"
             >
               <i className="fas fa-robot text-sm"></i>
-              Activar Lince
+              Activar Ipsum AI
             </button>
             <button
               onClick={() => setIsModalOpen(true)}

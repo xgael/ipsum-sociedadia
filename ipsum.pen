@@ -70,7 +70,7 @@
                       "id": "6TMjG",
                       "name": "logoText",
                       "fill": "#ffffff",
-                      "content": "Lince",
+                      "content": "Ipsum AI",
                       "fontFamily": "Space Grotesk",
                       "fontSize": 16,
                       "fontWeight": "600"
@@ -440,7 +440,7 @@
                       "id": "hRCg7",
                       "name": "btnActText",
                       "fill": "#ffffff",
-                      "content": "Activar Lince",
+                      "content": "Activar Ipsum AI",
                       "fontFamily": "Space Grotesk",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -1428,7 +1428,7 @@
                       "id": "56gXS",
                       "name": "logoText",
                       "fill": "#ffffff",
-                      "content": "Lince",
+                      "content": "Ipsum AI",
                       "fontFamily": "Space Grotesk",
                       "fontSize": 15,
                       "fontWeight": "600"
@@ -1790,7 +1790,7 @@
                       "id": "Lhkbk",
                       "name": "btnActText",
                       "fill": "#ffffff",
-                      "content": "Activar Lince",
+                      "content": "Activar Ipsum AI",
                       "fontFamily": "Space Grotesk",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -2927,7 +2927,8 @@
                       "fill": "#a3a3a3",
                       "content": "·",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",

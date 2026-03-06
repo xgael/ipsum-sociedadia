@@ -3,10 +3,8 @@ export default function Header() {
     <div className="flex flex-col gap-8 sm:gap-10">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/img/ipsum-all.png" alt="Ipsum Technology" className="h-6 w-auto" />
-          <span className="font-heading text-[var(--text-muted)] text-base">·</span>
-          <span className="font-heading text-[var(--text-primary)] text-base font-semibold">Lince AI</span>
+        <div className="flex items-center">
+          <img src="/img/ipsum-all.png" alt="Ipsum Technology" className="h-16 w-auto" />
         </div>
       </div>
 

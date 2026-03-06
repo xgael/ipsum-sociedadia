@@ -11,7 +11,7 @@ Teléfono: ${telefono}
 Carrera de interés: ${carrera}
 Campus: ${campus}
 
-Este prospecto preguntó por revalidación de materias durante su llamada con Lince.
+Este prospecto preguntó por revalidación de materias durante su llamada con Ipsum AI.
 El predictamen de materias queda listo en menos de 24 horas.
 
 NOTA: En producción esta alerta se enviaría automáticamente vía WhatsApp al detectarse la revalidación.`
