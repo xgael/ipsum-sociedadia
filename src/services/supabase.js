@@ -30,11 +30,38 @@ export async function lanzarMasivo() {
   return res.text()
 }
 
+export async function registrarLeadN8N(prospecto, phone) {
+  const res = await fetch('https://n8n.srv1266777.hstgr.cloud/webhook/ipsum-registro-lead', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prospecto, phone }),
+  })
+  if (!res.ok) throw new Error('Error al registrar lead en n8n')
+  return res.json()
+}
+
 export async function llamarIndividual(id) {
   const res = await fetch(WORKER_LANZADOR_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id }),
   })
+  return res.json()
+}
+
+export async function fetchAlumnoById(id) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/alumnos?id=eq.${id}&select=*`, { headers })
+  if (!res.ok) throw new Error('Error al consultar alumno')
+  const data = await res.json()
+  return data[0] || null
+}
+
+export async function postLlamadaN8N(prospecto, phone, transcript) {
+  const res = await fetch('https://n8n.srv1266777.hstgr.cloud/webhook/ipsum-post-llamada', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prospecto, phone, transcript }),
+  })
+  if (!res.ok) throw new Error('Error al enviar post-llamada a n8n')
   return res.json()
 }
