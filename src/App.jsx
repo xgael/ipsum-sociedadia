@@ -42,7 +42,15 @@ function App() {
         const alumno = await fetchAlumnoById(id)
         if (alumno && alumno.estatus === 'completada' && alumno.resumen_llamada) {
           clearInterval(interval)
-          postLlamadaN8N(nombre, telefono, alumno.resumen_llamada).catch(() => {})
+          postLlamadaN8N(
+            nombre,
+            telefono,
+            alumno.resumen_llamada,
+            alumno.responded,
+            alumno.success,
+            alumno.call_url,
+            alumno.call_duration,
+          ).catch(() => {})
         }
       } catch {}
     }, 10000)
