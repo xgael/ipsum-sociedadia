@@ -49,19 +49,3 @@ export async function llamarIndividual(id) {
   return res.json()
 }
 
-export async function fetchAlumnoById(id) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/alumnos?id=eq.${id}&select=*`, { headers })
-  if (!res.ok) throw new Error('Error al consultar alumno')
-  const data = await res.json()
-  return data[0] || null
-}
-
-export async function postLlamadaN8N(prospecto, phone, transcript, responded, success, call_url, call_duration) {
-  const res = await fetch('https://n8n.srv1266777.hstgr.cloud/webhook/ipsum-post-llamada', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prospecto, phone, transcript, responded, success, call_url, call_duration }),
-  })
-  if (!res.ok) throw new Error('Error al enviar post-llamada a n8n')
-  return res.json()
-}

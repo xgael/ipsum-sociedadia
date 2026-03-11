@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useAlumnos } from './hooks/useAlumnos'
-import { lanzarMasivo, llamarIndividual, fetchAlumnoById, postLlamadaN8N } from './services/supabase'
+import { lanzarMasivo, llamarIndividual } from './services/supabase'
 import { useToast } from './components/Toast'
 import Header from './components/Header'
 import KpiCards from './components/KpiCards'
@@ -36,27 +36,6 @@ function App() {
     }
   }
 
-  const esperarTranscript = (id, nombre, telefono) => {
-    const interval = setInterval(async () => {
-      try {
-        const alumno = await fetchAlumnoById(id)
-        if (alumno && alumno.estatus === 'completada' && alumno.resumen_llamada) {
-          clearInterval(interval)
-          postLlamadaN8N(
-            nombre,
-            telefono,
-            alumno.resumen_llamada,
-            alumno.responded,
-            alumno.success,
-            alumno.call_url,
-            alumno.call_duration,
-          ).catch(() => {})
-        }
-      } catch {}
-    }, 10000)
-    setTimeout(() => clearInterval(interval), 600000)
-  }
-
   const handleCallIndividual = async (id, telefono, nombre) => {
     const ok = await showConfirm(
       'Iniciar llamada',
@@ -67,7 +46,6 @@ function App() {
     try {
       const data = await llamarIndividual(id)
       toast(data.mensaje || 'Ipsum AI ha iniciado la llamada.')
-      esperarTranscript(id, nombre, telefono)
       setTimeout(refetch, 3000)
     } catch {
       toast('Error al contactar al servidor.', 'error')
