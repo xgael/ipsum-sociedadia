@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useAlumnos } from './hooks/useAlumnos'
-import { lanzarMasivo, llamarIndividual } from './services/supabase'
+import { lanzarMasivo, llamarIndividual, deleteAlumno } from './services/supabase'
 import { useToast } from './components/Toast'
 import Header from './components/Header'
 import KpiCards from './components/KpiCards'
@@ -33,6 +33,22 @@ function App() {
       setTimeout(refetch, 2000)
     } catch {
       toast('Error de conexión.', 'error')
+    }
+  }
+
+  const handleDeleteProspect = async (id, nombre) => {
+    const ok = await showConfirm(
+      'Eliminar prospecto',
+      `¿Eliminar a ${nombre} de la base de datos? Esta acción no se puede deshacer.`,
+      'Eliminar'
+    )
+    if (!ok) return
+    try {
+      await deleteAlumno(id)
+      toast(`${nombre} eliminado correctamente.`)
+      refetch()
+    } catch {
+      toast('Error al eliminar el prospecto.', 'error')
     }
   }
 
@@ -88,6 +104,7 @@ function App() {
             loading={loading}
             error={error}
             onCallIndividual={handleCallIndividual}
+            onDeleteProspect={handleDeleteProspect}
           />
         </div>
       </div>

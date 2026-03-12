@@ -49,3 +49,11 @@ export async function llamarIndividual(id) {
   return res.json()
 }
 
+export async function deleteAlumno(id) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/alumnos?id=eq.${id}`, {
+    method: 'DELETE',
+    headers,
+  })
+  if (!res.ok) throw new Error('Error al eliminar el prospecto.')
+}
+

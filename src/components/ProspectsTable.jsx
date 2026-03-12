@@ -11,11 +11,27 @@ import {
 import StatusBadge from './StatusBadge'
 import ProspectExpandedRow from './ProspectExpandedRow'
 
-export default function ProspectsTable({ alumnos, loading, error, onCallIndividual }) {
+export default function ProspectsTable({ alumnos, loading, error, onCallIndividual, onDeleteProspect }) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [sorting, setSorting] = useState([])
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 })
   const [expanded, setExpanded] = useState({})
+  const [columnFilters, setColumnFilters] = useState([])
+
+  const statusOptions = useMemo(() => {
+    const unique = [...new Set(alumnos.map(a => a.estatus).filter(Boolean))]
+    return unique.sort()
+  }, [alumnos])
+
+  const statusFilter = columnFilters.find(f => f.id === 'estatus')?.value || ''
+
+  const setStatusFilter = (value) => {
+    setColumnFilters(prev => {
+      const rest = prev.filter(f => f.id !== 'estatus')
+      return value ? [...rest, { id: 'estatus', value }] : rest
+    })
+    setPagination(prev => ({ ...prev, pageIndex: 0 }))
+  }
 
   const columns = useMemo(() => [
     {
@@ -48,6 +64,7 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
       accessorKey: 'estatus',
       header: 'Estatus',
       cell: ({ getValue }) => <StatusBadge estatus={getValue()} />,
+      filterFn: 'equals',
     },
     {
       id: 'interes',
@@ -68,7 +85,7 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
       id: 'accion',
       header: () => <span className="block text-right">Acción</span>,
       cell: ({ row }) => (
-        <div className="text-right">
+        <div className="text-right flex items-center justify-end gap-2">
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -78,18 +95,29 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
           >
             <i className="fas fa-phone text-xs"></i> Llamar
           </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDeleteProspect(row.original.id, row.original.nombre)
+            }}
+            title="Eliminar prospecto"
+            className="border border-[var(--border)] text-[var(--text-muted)] p-2 transition-all duration-200 hover:border-red-400 hover:text-red-500 hover:bg-red-50"
+          >
+            <i className="fas fa-trash text-xs"></i>
+          </button>
         </div>
       ),
     },
-  ], [onCallIndividual])
+  ], [onCallIndividual, onDeleteProspect])
 
   const table = useReactTable({
     data: alumnos,
     columns,
-    state: { globalFilter, sorting, pagination, expanded },
+    state: { globalFilter, sorting, pagination, expanded, columnFilters },
     onGlobalFilterChange: setGlobalFilter,
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
+    onColumnFiltersChange: setColumnFilters,
     onExpandedChange: (updater) => {
       setExpanded((prev) => {
         const next = typeof updater === 'function' ? updater(prev) : updater
@@ -109,21 +137,73 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
 
   const totalColumns = columns.length
 
+  const exportCSV = () => {
+    const rows = table.getFilteredRowModel().rows
+    const headers = ['Nombre', 'Teléfono', 'Estatus', 'Carrera', 'Modalidad', 'Campus']
+    const csvRows = rows.map(row => {
+      const a = row.original
+      return [a.nombre, a.telefono, a.estatus, a.carrera_interes || '', a.modalidad_interes || '', a.campus_interes || '']
+        .map(v => `"${String(v).replace(/"/g, '""')}"`)
+        .join(',')
+    })
+    const csv = '\uFEFF' + [headers.join(','), ...csvRows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `prospectos_${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="border border-[var(--border)] overflow-hidden">
       {/* Table Header */}
-      <div className="px-6 py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">Base de Datos de Prospectos</h2>
-        <div className="flex items-center gap-3.5">
-          <div className="flex items-center gap-2 bg-[var(--bg-muted)] border border-[var(--border)] px-3.5 py-2 rounded">
-            <i className="fas fa-search text-[var(--text-muted)] text-xs"></i>
-            <input
-              type="text"
-              value={globalFilter ?? ''}
-              onChange={e => setGlobalFilter(e.target.value)}
-              placeholder="Buscar prospecto..."
-              className="bg-transparent font-body text-[13px] text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none w-40"
-            />
+      <div className="px-6 py-5 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">Base de Datos de Prospectos</h2>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex items-center gap-2 bg-[var(--bg-muted)] border border-[var(--border)] px-3.5 py-2 rounded">
+              <i className="fas fa-search text-[var(--text-muted)] text-xs"></i>
+              <input
+                type="text"
+                value={globalFilter ?? ''}
+                onChange={e => { setGlobalFilter(e.target.value); setPagination(prev => ({ ...prev, pageIndex: 0 })) }}
+                placeholder="Buscar prospecto..."
+                className="bg-transparent font-body text-[13px] text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none w-40"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="font-body text-[13px] bg-[var(--bg-muted)] border border-[var(--border)] text-[var(--text-primary)] px-3 py-2 rounded outline-none cursor-pointer"
+            >
+              <option value="">Todos los estatus</option>
+              {statusOptions.map(s => (
+                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+              ))}
+            </select>
+            <button
+              onClick={exportCSV}
+              className="font-body text-[13px] font-medium border border-[var(--border)] text-[var(--text-primary)] px-3.5 py-2 rounded inline-flex items-center gap-1.5 hover:bg-[var(--bg-muted)] transition-colors"
+            >
+              <i className="fas fa-file-csv text-xs"></i> Exportar
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-body text-[13px] text-[var(--text-secondary)]">Mostrar</span>
+            <select
+              value={pagination.pageSize}
+              onChange={e => setPagination({ pageIndex: 0, pageSize: Number(e.target.value) })}
+              className="font-body text-[13px] bg-[var(--bg-muted)] border border-[var(--border)] text-[var(--text-primary)] px-2 py-1 rounded outline-none cursor-pointer"
+            >
+              {[10, 25, 50, 100].map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+            <span className="font-body text-[13px] text-[var(--text-secondary)]">entradas</span>
           </div>
           <span className="font-body text-[13px] text-[var(--text-secondary)] font-medium whitespace-nowrap">
             {loading && <i className="fas fa-sync-alt animate-spin mr-2"></i>}
@@ -242,12 +322,21 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
                     {row.original.modalidad_interes || '—'} · {row.original.campus_interes || '—'}
                   </div>
                 </div>
-                <button
-                  onClick={() => onCallIndividual(row.original.id, row.original.telefono, row.original.nombre)}
-                  className="w-full font-body text-[var(--text-primary)] border border-[var(--text-primary)] font-semibold py-2.5 transition-all text-[13px] flex items-center justify-center gap-2 hover:bg-[var(--text-primary)] hover:text-[var(--bg-surface)]"
-                >
-                  <i className="fas fa-phone text-xs"></i> Llamar
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onCallIndividual(row.original.id, row.original.telefono, row.original.nombre)}
+                    className="flex-1 font-body text-[var(--text-primary)] border border-[var(--text-primary)] font-semibold py-2.5 transition-all text-[13px] flex items-center justify-center gap-2 hover:bg-[var(--text-primary)] hover:text-[var(--bg-surface)]"
+                  >
+                    <i className="fas fa-phone text-xs"></i> Llamar
+                  </button>
+                  <button
+                    onClick={() => onDeleteProspect(row.original.id, row.original.nombre)}
+                    title="Eliminar prospecto"
+                    className="border border-[var(--border)] text-[var(--text-muted)] px-3.5 transition-all duration-200 hover:border-red-400 hover:text-red-500 hover:bg-red-50"
+                  >
+                    <i className="fas fa-trash text-xs"></i>
+                  </button>
+                </div>
                 <button
                   onClick={row.getToggleExpandedHandler()}
                   className="font-body text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors flex items-center gap-1"
@@ -268,42 +357,49 @@ export default function ProspectsTable({ alumnos, loading, error, onCallIndividu
       </div>
 
       {/* Pagination */}
-      {table.getPageCount() > 1 && (
+      {table.getFilteredRowModel().rows.length > 0 && (
         <>
           <div className="w-full h-px bg-[var(--border)]" />
           <div className="px-6 py-4 flex items-center justify-between">
             <span className="font-body text-[13px] text-[var(--text-secondary)]">
-              Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+              Mostrando {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} a{' '}
+              {Math.min(
+                (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                table.getFilteredRowModel().rows.length
+              )}{' '}
+              de {table.getFilteredRowModel().rows.length} prospectos
             </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="font-body text-[13px] font-medium px-3 py-1.5 border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <i className="fas fa-chevron-left text-xs"></i>
-              </button>
-              {Array.from({ length: table.getPageCount() }, (_, i) => (
+            {table.getPageCount() > 1 && (
+              <div className="flex items-center gap-2">
                 <button
-                  key={i}
-                  onClick={() => table.setPageIndex(i)}
-                  className={`font-body text-[13px] font-medium w-8 h-8 flex items-center justify-center border transition-colors ${
-                    table.getState().pagination.pageIndex === i
-                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                      : 'border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)]'
-                  }`}
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  className="font-body text-[13px] font-medium px-3 py-1.5 border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {i + 1}
+                  <i className="fas fa-chevron-left text-xs"></i>
                 </button>
-              ))}
-              <button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="font-body text-[13px] font-medium px-3 py-1.5 border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <i className="fas fa-chevron-right text-xs"></i>
-              </button>
-            </div>
+                {Array.from({ length: table.getPageCount() }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => table.setPageIndex(i)}
+                    className={`font-body text-[13px] font-medium w-8 h-8 flex items-center justify-center border transition-colors ${
+                      table.getState().pagination.pageIndex === i
+                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                        : 'border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)]'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  className="font-body text-[13px] font-medium px-3 py-1.5 border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--bg-muted)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <i className="fas fa-chevron-right text-xs"></i>
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
